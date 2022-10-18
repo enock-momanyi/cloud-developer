@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+//import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
 import * as uuid from 'uuid'
@@ -22,16 +22,18 @@ export async function createTodo(createTodoRequest: CreateTodoRequest, userId: s
     createdAt: new Date().toISOString(),
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,
+    attachmentUrl:''
+    ,
     done: false
   })
 }
 
-export async function updateTodo(updateTodoRequest: UpdateTodoRequest, todoId: string){
-  return await todoAcess.updateTodo(updateTodoRequest,todoId)
+export async function updateTodo(updateTodoRequest: UpdateTodoRequest, todoId: string, userId: string){
+  return await todoAcess.updateTodo(updateTodoRequest,todoId, userId)
 }
 
-export async function deleteTodo(todoId: string): Promise<void>{
-  await todoAcess.deleteTodo(todoId)
+export async function deleteTodo(todoId: string, userId: string): Promise<void>{
+  await todoAcess.deleteTodo(todoId, userId)
 }
 
 export async function getTodosForUser(userId: string): Promise<TodoItem[]>{
@@ -47,7 +49,7 @@ export function createAttachmentPresignedUrl(objectID: string){
       return s3.getSignedUrl('putObject',{
         Bucket: bucketName,
         Key: objectID,
-        Expires: expirationDuration
+        Expires: Number(expirationDuration)
       })
 }
 

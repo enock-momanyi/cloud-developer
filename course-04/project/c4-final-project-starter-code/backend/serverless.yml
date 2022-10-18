@@ -11,7 +11,6 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
-  lambdaHashingVersion: '20201221'
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
@@ -25,7 +24,7 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: serverless-c4-todo-images-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: serverless-c4-todo-files-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
     TODO_ID_INDEX: TodoIdIndex
 
@@ -118,6 +117,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -134,7 +134,14 @@ functions:
         Action:
           - s3:PutObject
           - s3:GetObject
+        Resource: "arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*"
+      - Effect: Allow
+        Action:
           - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
 
 resources:
   Resources:
@@ -155,6 +162,11 @@ resources:
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: todoId
+            KeyType: RANGE
         AttributeDefinitions:
           - AttributeName: todoId
             AttributeType: S
@@ -162,28 +174,15 @@ resources:
             AttributeType: S
           - AttributeName: createdAt
             AttributeType: S
-          - AttributeName: name
-            AttributeType: S
-          - AttributeName: dueDate
-            AttributeType: S
-          - AttributeName: done
-            AttributeType: BOOL
-          - AttributeName: AttachmentUrl
-            AttributeType: S
-        KeySchema:
-          - AttributeName: userId
-            KeyType: HASH
-          - AttributeName: todoId
-            KeyType: RANGE
         LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
             KeySchema:
               - AttributeName: userId
-                KeyType: Hash
+                KeyType: HASH
               - AttributeName: createdAt
                 KeyType: RANGE
             Projection:
-                ProjectionType: All
+                ProjectionType: ALL
 
                 
         BillingMode: PAY_PER_REQUEST

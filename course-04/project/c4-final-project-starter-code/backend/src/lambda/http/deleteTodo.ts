@@ -13,7 +13,7 @@ export const handler = middy(
     const todoId = event.pathParameters.todoId
     // TODO: Remove a TODO item by id
     try{
-    await deleteTodo(todoId)
+    await deleteTodo(todoId,getUserId(event))
     return{
       statusCode: 200,
       body: ''

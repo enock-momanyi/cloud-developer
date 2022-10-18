@@ -1,7 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
 import * as middy from 'middy'
-import * as AWS  from 'aws-sdk'
 import { cors } from 'middy/middlewares'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { getUserId } from '../utils';
@@ -18,6 +17,7 @@ export const handler = middy(
       statusCode: 201,
       body: JSON.stringify({item})
     }
+  }
 )
 
 handler.use(
